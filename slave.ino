@@ -93,4 +93,99 @@ replay = false;
 }
 }
 
+
+//------------------------Slave 1 Module status code-------------------------------------//
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+const byte ENABLE_PIN = 2;
+
+SoftwareSerial rs485 (10, 11); // receive pin, transmit pin boolean replay = false;
+
+int myStatusValues[5] = {0, 1, 0, -1, -1};
+int i;
+
+void setup()
+{
+Serial.begin(9600);
+rs485.begin (28800);
+pinMode (ENABLE_PIN, OUTPUT); // register event
+}
+void loop()
+{
+digitalWrite (ENABLE_PIN, LOW);
+while (rs485.available())
+{
+char c = rs485.read();
+delay(10);
+if (c == '1') //1st slave ID
+{
+Serial.println("Sending from slave:" );
+Serial.println(c);
+digitalWrite (ENABLE_PIN, HIGH);
+replay = true;
+}
+delay(600);
+
+if (replay)
+{
+digitalWrite (ENABLE_PIN, HIGH);//enable sending to the master 
+Serial.println("Sending 1st slave Module Status Matrix"); 
+  for (i = 0; i < 5; i++) {
+    rs485.write(myStatusValues[i]);
+    Serial.println(myStatusValues[i]);
+    }
+digitalWrite (ENABLE_PIN, LOW);
+}
+replay = false;
+}
+}
+
+//------------------Slave 2 MOduel status code---------------------------------------------//
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+const byte ENABLE_PIN = 2;
+SoftwareSerial rs485 (10, 11); // receive pin, transmit pin boolean replay = false;
+int myStatusValues[5] = {1, 0, -1, 0, 1};
+int i;
+void setup()
+{
+Serial.begin(9600);
+rs485.begin (28800);
+pinMode (ENABLE_PIN, OUTPUT); // register event
+}
+void loop()
+{
+digitalWrite (ENABLE_PIN, LOW);
+while (rs485.available())
+{
+
+char c = rs485.read();
+delay(10);
+if (c == '1') //1st slave ID
+{
+Serial.println("Sending from slave:" );
+Serial.println(c);
+digitalWrite (ENABLE_PIN, HIGH);
+replay = true;
+}
+delay(600);
+
+if (replay)
+{
+
+digitalWrite (ENABLE_PIN, HIGH);//enable sending to the master 
+Serial.println("Sending 2nd slave Module Status Matrix"); 
+  for (i = 0; i < 5; i++) {
+   rs485.write(myStatusValues[i]);
+   Serial.println(myStatusValues[i]);
+   }
+digitalWrite (ENABLE_PIN, LOW);
+}
+replay = false;
+}
+}
+
+
   
