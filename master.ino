@@ -1,3 +1,5 @@
+// --------------------Master Code for module status and Module distance-----------------------------------------//
+
 #include <Wire.h>
 
 //byte i2cdata[3];
@@ -8,7 +10,8 @@ void setup() {
   Serial.begin(9600);
 
    //Distance Matrix..............................
-   //slave 1
+   
+  //accessing data from slave 1
    Wire.requestFrom(1, 3); //(slaves_address,no. of bytes requested)
   
   int a = Wire.available();
@@ -23,7 +26,7 @@ void setup() {
   Serial.println();
  
   delay(500);
-  //slave 2
+  // accessing data from slave 2
   
   Wire.requestFrom(2, 1);
   
@@ -41,8 +44,9 @@ void setup() {
   //memset(&i2cdata, 0, 3);
 
   delay(500);
-  //slave 3
-  /*
+ 
+  //accessing data from slave 3
+  
   Wire.requestFrom(3, 2);
   
   int c = Wire.available();
@@ -59,7 +63,7 @@ void setup() {
   //memset(&i2cdata, 0, 3);
 
   delay(500);
-  //Slave 4
+  //accessing data from Slave 4
   
   Wire.requestFrom(4, 4);
     
@@ -75,7 +79,8 @@ void setup() {
 
   Serial.println();
   delay(500);
-  //Slave 5
+ 
+ //accessing data from Slave 5
   Wire.requestFrom(5, 3);
     
   
@@ -90,9 +95,9 @@ void setup() {
 
   Serial.println();
 delay(500);
-*/
-/*
-  //module-status matrix..................................
+
+
+//---------------------------Master code for module-status matrix-----------------------------------//
    //slave 1
    Wire.requestFrom(1, 6);
     
@@ -172,10 +177,7 @@ delay(500);
   Serial.println();
  
   delay(500);
- */
+ 
 }
 
-void loop() {
-  
-
-}
+void loop() {}
