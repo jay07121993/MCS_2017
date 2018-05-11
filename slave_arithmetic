@@ -1,0 +1,218 @@
+//---------------------Slave 1 code-------------------------------------------------------------//
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+const byte ENABLE_PIN = 2;
+SoftwareSerial rs485 (10, 11); // receive pin, transmit pin
+
+boolean replay = false;
+int z = -1;
+void setup()
+{
+Serial.begin(9600);
+//delay(2000);
+rs485.begin (28800);
+pinMode (ENABLE_PIN, OUTPUT); // register event
+}
+void loop()
+{
+
+char res[10] = {0};
+char a[5] = {0};
+
+char b[5] = {0};
+char operation;
+int i = 0;
+int d = 0;
+char c;
+boolean op2 = false;
+int id = 1;
+
+//delay(10);
+digitalWrite (ENABLE_PIN, LOW);
+while (rs485.available()) {
+
+c = rs485.read();
+Serial.println(c);
+if (c == ';')
+{
+Serial.println("End Received from slave:");
+d = rs485.read() - '0';
+Serial.println(d);
+if (d != id)
+{
+
+Serial.println("Wrong Slave. Exit");
+digitalWrite (ENABLE_PIN, HIGH);
+return;
+}
+replay = true;
+break;
+}
+
+if (c == '+' || c == '-' || c == '*' || c == '/' || c == '(' || c == ')')
+{
+i = 0;
+op2 = true;
+operation = c;
+continue;
+}
+
+if (op2)
+b[i++] = c;
+else
+a[i++] = c;
+
+// delay(20);
+}
+
+digitalWrite (ENABLE_PIN, HIGH);
+int x = atoi(a);
+int y = atoi(b);
+
+//Serial.println(x);
+//Serial.println(y);
+switch (operation)
+{
+case '+': z = x + y;
+break;
+case '-': z = x - y;
+break;
+case '*': z = x * y;
+break;
+case '/': z = x / y;
+break;
+case '(': z = max(x, y);
+break;
+case ')': z = min(x, y);
+break;
+}
+
+//Serial.println(z);
+if (z > 0) {
+itoa(z, res, 10);
+//Serial.println(res);
+}
+
+if (replay && d == id && z > 0) {
+Serial.println("Sending result");
+Serial.println(res);
+digitalWrite (ENABLE_PIN, HIGH);
+rs485.write(res);
+digitalWrite (ENABLE_PIN, LOW);
+replay = false;
+z = -1;
+}
+}
+
+
+//------------------------SLAVE 2 CODE---------------------------------------------------------//
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+const byte ENABLE_PIN = 2;
+SoftwareSerial rs485 (10, 11); // receive pin, transmit pin
+
+boolean replay = false;
+int z = -1;
+void setup()
+{
+Serial.begin(9600);
+//delay(2000);
+rs485.begin (28800);
+pinMode (ENABLE_PIN, OUTPUT); // register event
+}
+void loop()
+{
+
+char res[10] = {0};
+char a[5] = {0};
+char b[5] = {0};
+char operation;
+
+int i = 0;
+int d = 0;
+char c;
+boolean op2 = false;
+int id = 2;
+
+digitalWrite (ENABLE_PIN, LOW);
+while (rs485.available()) {
+
+c = rs485.read();
+Serial.println(c);
+
+if (c == ';')
+{
+Serial.println("End Received from slave:");
+d = rs485.read() - '0';
+Serial.println(d);
+if (d != id)
+{
+Serial.println("Wrong Slave. Exit");
+digitalWrite (ENABLE_PIN, HIGH);
+return;
+}
+
+replay = true;
+break;
+}
+
+if (c == '+' || c == '-' || c == '*' || c == '/' || c == '(' || c == ')')
+{
+i = 0;
+op2 = true;
+operation = c;
+continue;
+}
+
+if (op2)
+b[i++] = c;
+else
+a[i++] = c;
+
+//delay(20);
+}
+
+digitalWrite (ENABLE_PIN, HIGH);
+
+int x = atoi(a);
+int y = atoi(b);
+
+//Serial.println(x);
+//Serial.println(y);
+switch (operation)
+{
+case '+': z = x + y;
+break;
+case '-': z = x - y;
+break;
+case '*': z = x * y;
+break;
+case '/': z = x / y;
+break;
+case '(': z = max(x, y);
+break;
+case ')': z = min(x, y);
+break;
+}
+
+
+//Serial.println(z);
+if (z > 0) {
+
+itoa(z, res, 10);
+//Serial.println(res);
+
+}
+
+if (replay && d == id && z > 0) {
+Serial.println("Sending result");
+Serial.println(res);
+digitalWrite (ENABLE_PIN, HIGH);
+
+rs485.write(res);
+digitalWrite (ENABLE_PIN, LOW);
+replay = false;
+z = -1;
+}
+}
