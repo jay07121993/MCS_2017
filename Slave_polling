@@ -1,0 +1,181 @@
+//---------------------------------Slave 1 Code for polling---------------------------------------//
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+
+const byte ENABLE_PIN = 2; //output pin 
+SoftwareSerial rs485 (10, 11); //receive and transmit pins
+
+boolean replay = true;
+boolean requested = false;
+int id = 1; //slave address
+uint8_t ch;
+
+void setup()
+{
+
+randomSeed(analogRead(0));
+Serial.begin(9600);
+rs485.begin (28800);
+pinMode (ENABLE_PIN, OUTPUT);
+}
+
+void loop()
+{
+digitalWrite (ENABLE_PIN, LOW); //begin receive
+while (rs485.available())
+{
+ch = rs485.read();
+
+if (ch == 'R')
+{
+//we are recieiving request from master
+
+if (rs485.read() != '1') //check if request is R1
+return;
+Serial.println("Request received");
+requested = true;
+
+}
+else
+{
+
+uint8_t b[4];
+if (ch == 'S') {
+int slave_num = rs485.read();
+
+b[0] = rs485.read();
+b[1] = rs485.read();
+b[2] = rs485.read();
+b[3] = rs485.read();
+long bignum = *((long *)b);
+Serial.println("Got Value from Slave:");
+Serial.println(slave_num);
+Serial.println("Value:");
+Serial.println(bignum); //printing values from master
+}
+}
+delay(100);
+}
+
+if (requested)
+{
+
+digitalWrite (ENABLE_PIN, HIGH);
+//rs485.write(x);
+long n = 837426840;
+uint8_t buf[4];
+
+for (int i = 0; i < 2; i++) 
+       {            //change i<2 to higher value is value to be sent is more than 2 
+buf[3] = (uint8_t)((n >> 24) & 0xFF);
+buf[2] = (uint8_t)((n >> 16) & 0xFF);
+buf[1] = (uint8_t)((n >> 8) & 0xFF);
+buf[0] = (uint8_t)(n & 0xFF);
+Serial.println("Sending to Master");
+Serial.println(n);
+rs485.write(buf, sizeof(buf)); //send long values to master when request is received
+n = n + 100000000;
+delay(10);
+}
+
+rs485.write('E'); //send End to master so as slave 1’s work is done, the master can continue to slave 2
+
+digitalWrite (ENABLE_PIN, LOW);
+requested = false;
+}
+
+delay(100);
+}
+
+//-----------------------Slave 2 code for polling----------------------------------------------//
+
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+
+const byte ENABLE_PIN = 2; //output pin 
+SoftwareSerial rs485 (10, 11); //receive and transmit pins
+
+boolean replay = true;
+boolean requested = false;
+int id = 2; //slave address
+uint8_t ch;
+
+void setup()
+{
+
+randomSeed(analogRead(0));
+Serial.begin(9600);
+rs485.begin (28800);
+
+pinMode (ENABLE_PIN, OUTPUT);
+}
+
+void loop()
+{
+digitalWrite (ENABLE_PIN, LOW); //begin receive
+while (rs485.available())
+{
+ch = rs485.read();
+
+if (ch == 'R')
+{
+//we are recieiving request from master
+
+if (rs485.read() != '2') //check if request is R1
+return;
+Serial.println("Request received");
+requested = true;
+}
+else
+{
+
+uint8_t b[4];
+if (ch == 'S') {
+int slave_num = rs485.read();
+
+b[0] = rs485.read();
+b[1] = rs485.read();
+b[2] = rs485.read();
+b[3] = rs485.read();
+long bignum = *((long *)b);
+Serial.println("Got Value from Slave:");
+Serial.println(slave_num);
+Serial.println("Value:");
+Serial.println(bignum); //printing values from master
+}
+}
+delay(100);
+}
+
+if (requested)
+{
+digitalWrite (ENABLE_PIN, HIGH);
+//rs485.write(x);
+long n = 452594789;
+uint8_t buf[4];
+
+for (int i = 0; i < 2; i++) 
+{                           //change i<2 to higher value is value to be sent is more than 2 
+
+buf[3] = (uint8_t)((n >> 24) & 0xFF);
+buf[2] = (uint8_t)((n >> 16) & 0xFF);
+buf[1] = (uint8_t)((n >> 8) & 0xFF);
+buf[0] = (uint8_t)(n & 0xFF);
+Serial.println("Sending to Master");
+Serial.println(n);
+
+rs485.write(buf, sizeof(buf)); //send long values to master when request is received 
+n = n + 100000000;
+delay(10);
+}
+
+rs485.write('E'); //send End to master so as slave 2’s work is done; the master can continue to slave 1
+
+digitalWrite (ENABLE_PIN, LOW);
+requested = false;
+
+}
+delay(100);
+}
