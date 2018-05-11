@@ -1,2 +1,2 @@
 # MCS_2017
-Moduler Conveyor System
+Moduler Conveyor System using Arduinos 
