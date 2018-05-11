@@ -1,78 +1,96 @@
-//------------------------ Slave 1 Module status and distance Matrix--------------------------------------//
+//------------------------ Slave 1 distance Matrix--------------------------------------//
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+const byte ENABLE_PIN = 2;
 
-#include <Wire.h>
+SoftwareSerial rs485 (10, 11); // receive pin, transmit pin boolean replay = false;
 
-int address = 1; //slave's address (unique address)
+int myDistValues[5] = {0, 5, 8, 6, 3};
+int i;
 
-void setup() {
-  Wire.begin(address);
-  Wire.onRequest(onRequest);
- // Wire.onRequest(onStatus);
+void setup()
+{
+Serial.begin(9600);
+rs485.begin (28800);
+pinMode (ENABLE_PIN, OUTPUT); // register event
+}
+void loop()
+{
+digitalWrite (ENABLE_PIN, LOW);
+while (rs485.available())
+
+{
+char c = rs485.read();
+delay(10);
+if (c == '1') //1st slave ID
+{
+Serial.println("Sending from slave:" );
+Serial.println(c);
+digitalWrite (ENABLE_PIN, HIGH);
+replay = true;
+}
+delay(600);
+if (replay){
+  digitalWrite (ENABLE_PIN, HIGH);//enable sending to the master 
+  Serial.println("Sending 1st slave Distance Matrix"); 
+   for (i = 0; i < 5; i++) {
+       rs485.write(myDistValues[i]);
+       Serial.println(myDistValues[i]);
+       }
+digitalWrite (ENABLE_PIN, LOW);
+}
+replay = false;
+}
+}
+
+//-----------------------------Slave 2 Distance matrix------------------------------//
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+
+const byte ENABLE_PIN = 2;
+
+SoftwareSerial rs485 (10, 11); // receive pin, transmit pin boolean replay = false;
+
+int myDistValues[5] = {5, 0, 4, 7, 10};
+int i;
+
+void setup()
+{
+Serial.begin(9600);
+rs485.begin (28800);
+
+pinMode (ENABLE_PIN, OUTPUT); // register event
+}
+void loop()
+{
+digitalWrite (ENABLE_PIN, LOW);
+while (rs485.available())
+{
+char c = rs485.read();
+delay(10);
+if (c == '2') //2nd slave ID
+{
+Serial.println("Sending from slave:" );
+Serial.println(c);
+
+digitalWrite (ENABLE_PIN, HIGH);
+replay = true;
+}
+delay(600);
+
+if (replay)
+{
+digitalWrite (ENABLE_PIN, HIGH);//enable sending to the master
+Serial.println("Sending 2nd slave Distance Matrix"); 
+  for (i = 0; i < 5; i++) {
+   rs485.write(myDistValues[i]);
+   Serial.println(myDistValues[i]);
+   }
+digitalWrite (ENABLE_PIN, LOW);
+}
+replay = false;
+}
+}
+
   
-}
-
-void loop() {
-  }
-
-void onRequest() { //function called to receive request from master
-  
-  byte buffer[5] = {1,5,8,6,3}; //distance matrix of slave 1 to other slaves
-  delay(5000);
-  Wire.write(buffer,5);
-}
-/*
- void onStatus() {
-  byte status[6] = {0,0,1,0,-1,-1};// Module status matrix to other slaves
-  Wire.write(status,6);
-}*/
-
-
-
-//-------------------------Slave 2 Module status and distance matrix--------------------------------------//
-#include <Wire.h>
-
-int address = 2;
-
-void setup() {
-  Wire.begin(address);
-  Wire.onRequest(onRequest);
-  
-}
-
-void loop() {}
-
-void onRequest() {
-  byte buffer[5] = {5,1,4,7,10};
-  Wire.write(buffer,5);
-}
-/*
-void onRequest() {
-  byte status[6] = {0,1,0,-1,0,1};
-  Wire.write(status,6);
-}
-*/
-
-
-//------------------------------Slave 3 Module status and distance matrix-----------------------------------------//
-
-#include <Wire.h>
-
-int address = 3;
-
-void setup() {
-  Wire.begin(address);
-  Wire.onRequest(onRequest);
-}
-
-void loop() {}
-
-void onRequest() {
-  byte buffer[5] = {8,4,1,3,6};
-  Wire.write(buffer,5);
-}
-/*
- void onRequest() {
-  byte status[6] = {0,0,1,0,-1,-1};
-  Wire.write(status,6);
-}
-*/
