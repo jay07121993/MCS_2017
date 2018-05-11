@@ -1,0 +1,85 @@
+//-----------Master code for Arithmetic Operation--------------------------------//
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+const byte ENABLE_PIN = 2;
+//const byte ENABLE_PIN1 = 3;
+SoftwareSerial rs485 (10, 11); // receive pin, transmit pin
+
+char input[10];
+char res[10];
+int charsRead = 0;
+char sl;
+boolean received = false;
+boolean sendNow = false;
+
+void setup()
+{
+
+Serial.begin(9600);
+rs485.begin (28800);
+
+pinMode (ENABLE_PIN, OUTPUT);
+
+}
+
+void loop()
+{
+Serial.flush();
+if (Serial.available() == 0)
+{
+}
+//delay(200);
+while (Serial.available() > 0)
+{
+
+charsRead = Serial.readBytesUntil('\n', input, sizeof(input) - 1);
+
+if (input[0] == 's')
+{
+sl = input[1];
+Serial.println(sl);
+}
+
+else
+{
+if (sl > 0)
+{
+input[charsRead] = sl;
+input[charsRead + 1] = '\0';
+Serial.println(input);
+sendNow = true;
+sl = NULL;
+  }
+ }
+}
+
+if (sendNow) {
+
+digitalWrite (ENABLE_PIN, HIGH); // enable sending
+//rs485.write(sl);
+Serial.println("sending");
+
+//	enable sending rs485.write(input);
+
+digitalWrite (ENABLE_PIN, LOW); 
+sendNow = false;
+charsRead = 0; 
+input[0] = 0;
+}
+
+int i = 0;
+delay(1000);
+digitalWrite (ENABLE_PIN, LOW);
+while (rs485.available() && !sendNow) {
+
+char c;
+c = rs485.read();
+res[i++] = c;
+
+//	delay(100); received = true;
+}
+digitalWrite (ENABLE_PIN, HIGH);
+if (i > 0)
+Serial.println(res);
+}
