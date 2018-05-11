@@ -1,0 +1,100 @@
+//-----------------------Master code for Polling-------------------------------------//
+
+#include "RS485_protocol.h"
+#include <SoftwareSerial.h>
+#define TOTAL_SLAVES 2 // Total slaves presently in the network 
+const byte ENABLE_PIN = 2; //output pin
+
+long data_matrix[TOTAL_SLAVES][2]; //matrix to send back to the slaves from master 
+SoftwareSerial rs485 (10, 11); // Receive and Transmit pins
+
+boolean stopp = false;
+int n = 1;
+uint8_t ch;
+int col = 0;
+long bignum;
+uint8_t b[4];
+
+void setup() {
+
+rs485.begin (28800);
+pinMode (ENABLE_PIN, OUTPUT);
+Serial.begin(9600);
+
+}
+void loop() {
+
+Serial.flush();
+char req[2];
+req[0] = 'R'; //Request messgae
+
+req[1] = n + '0'; //Request message with Slave address 
+digitalWrite (ENABLE_PIN, HIGH); //begin transmission
+
+rs485.write(req, sizeof(req)); //sending request message 
+Serial.println("requesting from slave "); Serial.println(n);
+
+digitalWrite (ENABLE_PIN, LOW); //end transmission 
+Serial.println(previousMillis);
+
+delay(1000);
+
+while ( rs485.available())
+{
+digitalWrite (ENABLE_PIN, LOW); //begin receive
+while ((ch = rs485.read()) != 'E') { //if receive is value and not End
+
+b[0] = ch;
+
+b[1] = rs485.read();
+b[2] = rs485.read();
+b[3] = rs485.read();
+
+bignum = *((long *)b); //reading long values from slave 
+Serial.println("Value received:"); 
+data_matrix[n - 1][col++] = bignum;
+
+Serial.println(bignum);
+delay(1000);
+
+}
+if (ch == 'E') {            //if receive is end
+
+Serial.println("End Value received from slave:"); 
+Serial.println(n);
+
+n++; //continue with next slave
+col = 0;
+
+digitalWrite (ENABLE_PIN, HIGH); //begin transmission
+delay(1000);
+ch = 0;
+if (n > TOTAL_SLAVES) {
+Serial.println("Sending back all values");
+
+for (int i = 0; i < TOTAL_SLAVES; i++)
+{
+uint8_t buf[6] = {0};
+for (int j = 0; j < 2; j++) //change j<2 if values receiving are higher than 2
+{
+Serial.println(data_matrix[i][j]);
+
+buf[5] = (uint8_t)((data_matrix[i][j] >> 24) & 0xFF); 
+buf[4] = (uint8_t)((data_matrix[i][j] >> 16) & 0xFF); 
+buf[3] = (uint8_t)((data_matrix[i][j] >> 8) & 0xFF);
+buf[2] = (uint8_t)(data_matrix[i][j] & 0xFF); 
+buf[1] = i + 1; //slave address stored in this buffer 
+buf[0] = 'S'; //S : slave
+
+rs485.write(buf, sizeof(buf)); //send all the values with slave address to all slaves 
+delay(100);
+
+}
+}
+n = 1; //slave address back to 1, repeat from the start
+}
+
+digitalWrite (ENABLE_PIN, LOW); //end transmission
+  }
+ }
+}
